@@ -115,5 +115,3 @@ finish db 'ready to go, press any key to load the kernel', 0
 
 times 510 - ($ - $$) db 0	; fill it in with zeros
 dw 0AA55h			; set it to be bootable
-
-	

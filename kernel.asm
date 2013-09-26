@@ -63,6 +63,13 @@
 
 %endmacro
 
+%macro tonum 1
+	sub %1, 48
+	
+%endmacro
+	
+		
+
 	;; ---------------------------------- actual start ------------------------------------- ;;
 
 	
@@ -117,8 +124,6 @@ input:
 
 enter:
 	print newline
-	print filetable
-	print newline
 	mov byte [chars], 0
 
 	;; compare to file table here
@@ -144,10 +149,11 @@ backspace:
 	jmp input
 
 exit:
-	mov ax, 0x5307
-	mov bx, 0x0000
-	mov cx, 0x0003
-	int 0x15
+	;mov ax, 0x5307
+	;mov bx, 0x0000
+	;mov cx, 0x0003
+	;int 0x15
+	mkchar 0x07
 	jmp input
 	
 clear:
@@ -275,13 +281,62 @@ getdeps:
 
 	
 getsectors:
-	print command
+	inc ecx	
+	call sectornum
+	inc ecx
+	call sizenum
+	
+	mkchar byte [sectorholder]
+	mkchar byte [sizeholder]
 
+	ret
+	
+sizenum:
+	mov byte [sizeholder], 0
+	mov edx, [ecx]
+	tonum edx
+	mov eax, 10
+	imul edx
+	mov [sizeholder], edx
+	inc ecx
+	
+	mov edx, [ecx]
+	tonum edx
+	mov eax, [sizeholder]
+	add edx, eax
+	mov [sizeholder], edx
+	inc ecx		; leaves it at the colon after the number
+	ret
+	
+
+sectornum:
+	mov byte [sectorholder], 0
+	mov edx, [ecx]	; setup ecx to point to the sector value
+	tonum edx
+	mov eax, 100	;
+	imul edx
+	mov [sectorholder], edx
+	inc ecx
+
+	mov edx, [ecx]
+	tonum edx
+	mov eax, 10
+	imul edx
+	mov eax, [sectorholder]
+	add edx, eax
+	mov [sectorholder], edx
+	inc ecx
+	
+	mov edx, [ecx]
+	tonum edx
+	mov eax, [sectorholder]
+	add edx, eax
+	mov [sectorholder], edx
+	inc ecx		; leaves it at the colon after the number
 	ret
 
 	;; string constants ;;
 	
-version db 'hippOS ver. 0.02', 10, 13, 0
 hello db 'Hello World!', 0
 newline db 10, 13, 0
 cursor db '> ', 0
@@ -291,5 +346,7 @@ chars dw 0
 command times 50 db 0
 nullbyte db 0
 sectorholder dw 0
+sizeholder dw 0
 recurselevel dw 0
 
+version db 'hippOS ver. 0.02', 10, 13, 0
