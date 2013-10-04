@@ -27,7 +27,7 @@ main:
 	mov ax, osload		; load some sectors up in here
 	mov es, ax
 	mov cl, ossect
-	mov al, 2		; sectors to load
+	mov al, 3		; sectors to load
 
 	call loadsector
 

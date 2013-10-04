@@ -67,6 +67,23 @@
 	sub %1, 48
 	
 %endmacro
+
+%macro tochar 1
+	add %1, 48
+%endmacro
+
+%macro multiply 2
+	mov [multarea], %1
+	%%loop:
+		mkchar %1
+		dec %2
+		cmp %2, 0
+		je %%end
+		add [%1], multarea
+		jmp %%loop
+	%%end:
+		mov %1, 10
+%endmacro
 	
 		
 
@@ -205,7 +222,7 @@ find:				; locate the correct module
 		jmp .cmplabel
 
 	.cmplabel:
-		cmp byte [ecx], '.'
+		cmp byte [ecx], ':'
 		je .found
 
 		
@@ -238,7 +255,7 @@ find:				; locate the correct module
 	;; B: read the dependancies one by one
 	;; C: recuse through all of them
 	;; D: jump to correct place
-		jmp getdeps
+		jmp getsectors
 
 getdeps:
 	
@@ -286,19 +303,22 @@ getsectors:
 	inc ecx
 	call sizenum
 	
-	mkchar byte [sectorholder]
-	mkchar byte [sizeholder]
+	;mkchar byte [sectorholder]
+	;mkchar byte [sizeholder]
 
-	ret
+	jmp reset
+	;jmp loadsectors
 	
 sizenum:
 	mov byte [sizeholder], 0
 	mov edx, [ecx]
 	tonum edx
 	mov eax, 10
-	imul edx
+	multiply edx, eax
 	mov [sizeholder], edx
 	inc ecx
+	
+	mkchar byte [sizeholder]
 	
 	mov edx, [ecx]
 	tonum edx
@@ -306,26 +326,30 @@ sizenum:
 	add edx, eax
 	mov [sizeholder], edx
 	inc ecx		; leaves it at the colon after the number
+	
+	mkchar byte[sizeholder]
 	ret
 	
 
 sectornum:
 	mov byte [sectorholder], 0
 	mov edx, [ecx]	; setup ecx to point to the sector value
+
 	tonum edx
 	mov eax, 100	;
-	imul edx
+	multiply edx, eax
 	mov [sectorholder], edx
 	inc ecx
-
+	
 	mov edx, [ecx]
 	tonum edx
 	mov eax, 10
-	imul edx
+	multiply edx, eax
 	mov eax, [sectorholder]
 	add edx, eax
 	mov [sectorholder], edx
 	inc ecx
+	
 	
 	mov edx, [ecx]
 	tonum edx
@@ -348,5 +372,6 @@ nullbyte db 0
 sectorholder dw 0
 sizeholder dw 0
 recurselevel dw 0
+multarea dw 0
 
-version db 'hippOS ver. 0.02', 10, 13, 0
+version db 'hipOS ver. 0.02', 10, 13, 0
