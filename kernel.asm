@@ -112,10 +112,25 @@ init:
 
 running:
 	cmp byte [isrunning], 1
-	je reset
+	je resetrun
 	
 	mov byte [isrunning], 1
 	jmp cont
+	
+resetrun:
+	call clearpgm
+	jmp reset
+	
+clearpgm:
+	mov eax, 0
+	mov si, loadpoint
+	.loop:
+		mov byte [si], 0
+		inc si
+		inc eax
+		cmp eax, 4200
+		jne .loop
+	ret
 
 input:
 	mov ah, 0x00
@@ -336,7 +351,7 @@ loadsector:
 		jmp reset
 		
 putparams:
-	mov si, [command]
+	mov si, command
 	.tilspace:
 
 		inc si
@@ -344,10 +359,11 @@ putparams:
 		je .fndspace
 		
 		cmp byte [si], 0
-		je .fndspace
+		je .endparams
 		jmp .tilspace
 	.fndspace:
-		
+	inc si
+	
 	mov di, loadpoint
 	mov al, [sizeholder]
 	mov ah, 0
@@ -367,11 +383,19 @@ putparams:
 		inc di
 		cmp byte [si], 0
 		jne .tilnull
-	
+	.endparams:
 	jmp runpgm
 	
 runpgm:
+	cmp byte [loadpoint], 0x0
+	je .errorjmp
+	
 	jmp loadnode:0000
+	
+	.errorjmp:
+		print noexist
+		print command
+		jmp reset
 
 	;; string data
 
@@ -380,6 +404,7 @@ runpgm:
 	
 hello db 'Hello World!', 0
 noload db 'Loading error in module: ', 0
+noexist db 'module is not on the disk: ', 0
 newline db 10, 13, 0
 cursor db '> ', 0
 notfound db 'module not found: ', 0

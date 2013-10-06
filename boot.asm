@@ -110,7 +110,6 @@ welcome db 'Loading sectors and starting OS...', 0
 error db 'failure loading sectors, any key to reboot', 0
 finish db 'ready to go, press any key to load the kernel', 0
 
-
 	;; the rest
 
 times 510 - ($ - $$) db 0	; fill it in with zeros
