@@ -1,6 +1,5 @@
 %define textcolor 0x09
 %define filetable 0x10000
-%define loadedtable 0x12000
 	
 [BITS 16]
 [ORG 0]
@@ -70,19 +69,6 @@
 
 %macro tochar 1
 	add %1, 48
-%endmacro
-
-%macro multiply 2
-	mov [multarea], %1
-	%%loop:
-		mkchar %1
-		dec %2
-		cmp %2, 0
-		je %%end
-		add [%1], multarea
-		jmp %%loop
-	%%end:
-		mov %1, 10
 %endmacro
 	
 		
@@ -299,65 +285,20 @@ getdeps:
 	
 getsectors:
 	inc ecx	
-	call sectornum
+	mov dl, [ecx]
+	mov [sectorholder], dl
+	times 2 inc ecx
+	mov dl, [ecx]
+	mov [sizeholder], dl
 	inc ecx
-	call sizenum
-	
-	;mkchar byte [sectorholder]
-	;mkchar byte [sizeholder]
+		
+	tochar byte [sectorholder]
+	tochar byte [sizeholder]
+	mkchar byte [sectorholder]
+	mkchar byte [sizeholder]
 
 	jmp reset
 	;jmp loadsectors
-	
-sizenum:
-	mov byte [sizeholder], 0
-	mov edx, [ecx]
-	tonum edx
-	mov eax, 10
-	multiply edx, eax
-	mov [sizeholder], edx
-	inc ecx
-	
-	mkchar byte [sizeholder]
-	
-	mov edx, [ecx]
-	tonum edx
-	mov eax, [sizeholder]
-	add edx, eax
-	mov [sizeholder], edx
-	inc ecx		; leaves it at the colon after the number
-	
-	mkchar byte[sizeholder]
-	ret
-	
-
-sectornum:
-	mov byte [sectorholder], 0
-	mov edx, [ecx]	; setup ecx to point to the sector value
-
-	tonum edx
-	mov eax, 100	;
-	multiply edx, eax
-	mov [sectorholder], edx
-	inc ecx
-	
-	mov edx, [ecx]
-	tonum edx
-	mov eax, 10
-	multiply edx, eax
-	mov eax, [sectorholder]
-	add edx, eax
-	mov [sectorholder], edx
-	inc ecx
-	
-	
-	mov edx, [ecx]
-	tonum edx
-	mov eax, [sectorholder]
-	add edx, eax
-	mov [sectorholder], edx
-	inc ecx		; leaves it at the colon after the number
-	ret
 
 	;; string constants ;;
 	
