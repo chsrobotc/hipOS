@@ -1,4 +1,4 @@
-dev = /dev/sdg
+dev = /dev/sdf
 
 all: core pgm run
 	
