@@ -1,5 +1,5 @@
 %define osload 0x1000
-%define tableload 0x2000
+%define tableload 0x1500
 %define modload 0x2400
 %define userload 0xA000
 %define stackstart 0xF000

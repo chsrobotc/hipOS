@@ -13,4 +13,7 @@ run:
 	sudo qemu-system-x86_64 -hda $(dev)
 	
 pgm:
+	make -C programs all
 	
+clear:
+	sudo dd if=/dev/zero of=$(dev)

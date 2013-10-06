@@ -1,5 +1,8 @@
 %define textcolor 0x09
-%define filetable 0x10000
+%define filetable 0x5000
+%define loadpoint 0x6000
+%define loadnode 0x1600
+%define drive 0x80
 	
 [BITS 16]
 [ORG 0]
@@ -77,12 +80,16 @@
 
 	
 real:
+	
 	mov ax, cs		; setup the segment pointers
 	mov ds, ax
 	mov es, ax
 	mov ax, 0x7000
 	mov ss, ax
 	mov sp, ss
+	
+	jmp running
+cont:
 	
 	call init
 
@@ -94,6 +101,7 @@ real:
 	;; functions ;;
 	
 init:
+	
 	call clear
 	setline 0,0
 	print version
@@ -101,6 +109,13 @@ init:
 	print cursor
 
 	ret
+
+running:
+	cmp byte [isrunning], 1
+	je reset
+	
+	mov byte [isrunning], 1
+	jmp cont
 
 input:
 	mov ah, 0x00
@@ -133,7 +148,8 @@ enter:
 	inc byte [recurselevel]
 	jmp find
 	
-reset:	call resetcommand
+reset:	
+	call resetcommand
 	print newline
 	print cursor
 	jmp input
@@ -176,15 +192,13 @@ resetcommand:
 	mov ah, 0
 
 	.loop:
-		cmp ah, 50
+		cmp ah, 100
 		je .end
 		mov byte [di], 0
 		inc di
 		inc ah
 		jmp .loop
 	.end:
-		mkchar '*'
-		print command
 		ret
 
 find:				; locate the correct module
@@ -291,28 +305,91 @@ getsectors:
 	mov dl, [ecx]
 	mov [sizeholder], dl
 	inc ecx
-		
-	tochar byte [sectorholder]
-	tochar byte [sizeholder]
-	mkchar byte [sectorholder]
-	mkchar byte [sizeholder]
 
-	jmp reset
-	;jmp loadsectors
+	jmp loadsectors
+	
+loadsectors:
+	
+	mov ax, loadnode		; load some sectors up in here
+	mov es, ax
+	mov cl, [sectorholder]
+	mov al, [sizeholder]		; sectors to load
+	
+	call loadsector
+	
+	jmp putparams
+
+loadsector:
+
+	mov bx, 0
+	mov dl, drive
+	mov dh, 0
+	mov ch, 0
+	mov ah, 2
+	int 0x13
+	jc .error
+	ret
+
+	.error:
+		print noload
+		print command
+		jmp reset
+		
+putparams:
+	mov si, [command]
+	.tilspace:
+
+		inc si
+		cmp byte [si], ' '
+		je .fndspace
+		
+		cmp byte [si], 0
+		je .fndspace
+		jmp .tilspace
+	.fndspace:
+		
+	mov di, loadpoint
+	mov al, [sizeholder]
+	mov ah, 0
+	.tilend:
+
+		inc ah
+		add di, 0x200
+		
+		cmp al, ah
+		jne .tilend
+		
+	.tilnull:
+		mov bh, [si]
+		mov [di], bh
+
+		inc si
+		inc di
+		cmp byte [si], 0
+		jne .tilnull
+	
+	jmp runpgm
+	
+runpgm:
+	jmp loadnode:0000
+
+	;; string data
+
 
 	;; string constants ;;
 	
 hello db 'Hello World!', 0
+noload db 'Loading error in module: ', 0
 newline db 10, 13, 0
 cursor db '> ', 0
 notfound db 'module not found: ', 0
 back db 0x8, 0x20, 0x8, 0
 chars dw 0
-command times 50 db 0
+command times 100 db 0
 nullbyte db 0
 sectorholder dw 0
 sizeholder dw 0
 recurselevel dw 0
-multarea dw 0
+isrunning dw 0
 
-version db 'hipOS ver. 0.02', 10, 13, 0
+version db 'hipOS ver. 0.04', 10, 13, 0
