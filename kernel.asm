@@ -411,7 +411,6 @@ notfound db 'module not found: ', 0
 back db 0x8, 0x20, 0x8, 0
 chars dw 0
 command times 100 db 0
-nullbyte db 0
 sectorholder dw 0
 sizeholder dw 0
 recurselevel dw 0

@@ -11,3 +11,6 @@ all:
 	
 	nasm echo.asm -f bin -o echo.bin
 	sudo dd if=echo.bin of=$(dev) seek=11
+	
+	nasm add.asm -f bin -o add.bin
+	sudo dd if=add.bin of=$(dev) seek=12
